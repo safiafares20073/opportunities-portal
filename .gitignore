@@ -1,0 +1,38 @@
+# Environment & Secrets
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.cert
+*.pfx
+*.p12
+credentials.json
+secrets/
+
+# Logs & Temporary Files
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Directories
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Build & Dependency Artifacts (if added in future tooling)
+node_modules/
+dist/
+build/
+.cache/
