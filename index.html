@@ -21,8 +21,13 @@
         </div>
         <div>
           <h1 class="brand-title">بوابة الفرص</h1>
-          <p class="brand-subtitle">دليلك الموثوق للمنح الدراسية والدورات والتدريب المهني</p>
+          <p class="brand-subtitle">استكشف المنح الدراسية والدورات والتدريب المهني</p>
         </div>
+      </div>
+
+      <div class="display-preferences" aria-label="Display preferences">
+        <button id="language-toggle" type="button" class="preference-button" aria-label="Switch to English" aria-pressed="false">English</button>
+        <button id="theme-toggle" type="button" class="preference-button" aria-label="تفعيل الوضع الداكن" aria-pressed="false">☾ الوضع الداكن</button>
       </div>
 
       <!-- View Toggle: All / Favorites -->
@@ -53,6 +58,10 @@
 
   <!-- Main Content -->
   <main id="main-content" role="main">
+
+    <section class="container" aria-label="تنبيه بشأن حالة الفرص">
+      <p class="source-notice">تضم البوابة 10 منح دراسية للبكالوريوس والماجستير والدكتوراه، و10 دورات تعليمية عبر منصات رسمية. تعرض المواعيد المعلنة لكل منحة، وتخضع أهلية المتقدمين لشروط الجهة المانحة وإجراءات القبول. راجع رابط المصدر الرسمي قبل التقديم.</p>
+    </section>
 
     <!-- Search & Filter Controls -->
     <section class="search-filters-section" aria-label="أدوات البحث والتصفية">
@@ -94,6 +103,17 @@
             <label for="filter-field" class="filter-label">المجال والتخصص</label>
             <select id="filter-field" class="filter-select" aria-label="تصفية حسب المجال">
               <option value="">جميع التخصصات</option>
+            </select>
+          </div>
+
+          <!-- Scholarship study-level filter -->
+          <div class="filter-group" id="level-filter-group">
+            <label for="filter-level" class="filter-label">المستوى الدراسي</label>
+            <select id="filter-level" class="filter-select" aria-label="تصفية حسب المستوى الدراسي">
+              <option value="">جميع المستويات</option>
+              <option value="bachelor">بكالوريوس</option>
+              <option value="master">ماجستير</option>
+              <option value="phd">دكتوراه</option>
             </select>
           </div>
 
@@ -157,7 +177,7 @@
   <!-- Footer -->
   <footer class="site-footer" role="contentinfo">
     <div class="container">
-      <p>بوابة الفرص — مشروع التخرج | جميع الفرص تخضع للتحقق اليدوي والمستقل بنسبة 100%</p>
+      <p>بوابة الفرص © 2026 | فرص تعليمية ومنح دراسية للطلاب في اليمن</p>
     </div>
   </footer>
 
@@ -196,6 +216,7 @@
   </div>
   <!-- End Modal -->
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/ui-preferences.js?v=8"></script>
 </body>
 </html>

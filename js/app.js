@@ -22,6 +22,7 @@
       category: '',
       field: '',
       country: '',
+      level: '',
       status: ''
     },
     dataSource: 'data/opportunities.json',
@@ -109,14 +110,19 @@
    * All user-supplied strings go through escapeHtml().
    */
   function buildModalHTML(item) {
-    const deadlineInfo = calculateDeadlineStatus(item.deadline);
+    const deadlineInfo = calculateDeadlineStatus(item.deadline, item.category);
+    if (item.review_status === 'programme_suspended_or_unconfirmed') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'البرنامج غير مؤكد / معلّق', isExpired: false });
+    } else if (item.review_status === 'needs_manual_verification') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'يحتاج التحقق من التقديم', isExpired: false });
+    }
     const categoryInfo = CATEGORY_MAP[item.category] || {
       label: item.category || 'أخرى',
       className: 'default'
     };
     const deadlineFormatted =
       item.deadline === 'Rolling'
-        ? 'تقديم مستمر (Rolling)'
+        ? (item.category === 'Course' ? 'تعلم مرن / تحقق من التسجيل' : 'يختلف حسب دورة التقديم')
         : escapeHtml(item.deadline) || '—';
 
     const favored = isFavorite(item.id);
@@ -155,7 +161,7 @@
         </div>
         <div class="modal-fact-row">
           <dt>الدولة / الوجهة</dt>
-          <dd><bdi>${escapeHtml(item.country) || '—'}</bdi></dd>
+          <dd><bdi>${escapeHtml(countryLabel(item.country)) || '—'}</bdi></dd>
         </div>
         <div class="modal-fact-row">
           <dt>نطاق التمويل</dt>
@@ -174,13 +180,14 @@
         <p class="modal-section-text">${escapeHtml(item.eligibility_ar)}</p>
       </div>` : ''}
 
+      ${item.review_note_ar ? `<div class="modal-section"><h4 class="modal-section-heading">حالة التحقق والتقديم</h4><p class="modal-section-text">${escapeHtml(item.review_note_ar)}</p></div>` : ''}
       <!-- Verification Badge -->
       <div class="modal-verification">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
-        <span>تم التحقق اليدوي بتاريخ:
+        <span>تاريخ مراجعة الصفحة الرسمية:
           <time datetime="${escapeHtml(item.verification_date || '')}">
             <bdi>${escapeHtml(item.verification_date) || 'غير محدد'}</bdi>
           </time>
@@ -189,12 +196,12 @@
 
       <!-- Action Buttons -->
       <div class="modal-actions">
-        <a href="${escapeHtml(item.official_url)}"
+        <a href="${escapeHtml(safeOfficialUrl(item.official_url))}"
            target="_blank"
            rel="noopener noreferrer"
            class="btn-apply modal-btn-apply ${deadlineInfo.isExpired ? 'disabled' : ''}"
            aria-label="الانتقال إلى الموقع الرسمي لـ${escapeHtml(item.title_ar)}">
-          <span>${deadlineInfo.isExpired ? 'انتهى التقديم' : 'رابط التقديم الرسمي'}</span>
+          <span>${deadlineInfo.isExpired ? 'انتهى التقديم' : 'زيارة المصدر الرسمي'}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
             <polyline points="15 3 21 3 21 9"></polyline>
@@ -314,8 +321,21 @@
    * Returns: { status, badgeClass, label, isExpired }
    * Strict Arabic badges: "متاحة", "تغلق قريبًا", "منتهية"
    */
-  function calculateDeadlineStatus(deadlineStr) {
-    if (!deadlineStr || deadlineStr === 'Rolling') {
+  function calculateDeadlineStatus(deadlineStr, category) {
+    // A seasonal scholarship or internship has an application cycle, not a
+    // guaranteed year-round open call. Never infer availability from "Rolling".
+    if (deadlineStr === 'Rolling' && category && category !== 'Course') {
+      return {
+        status: 'تحقق من التقديم',
+        badgeClass: 'status-unknown',
+        label: 'تحقق من فترة التقديم',
+        isExpired: false
+      };
+    }
+    if (!deadlineStr) {
+      return { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'موعد غير محدد', isExpired: false };
+    }
+    if (deadlineStr === 'Rolling') {
       return {
         status: 'متاحة',
         badgeClass: 'status-active',
@@ -331,12 +351,7 @@
     deadlineDate.setHours(0, 0, 0, 0);
 
     if (isNaN(deadlineDate.getTime())) {
-      return {
-        status: 'متاحة',
-        badgeClass: 'status-active',
-        label: 'متاحة',
-        isExpired: false
-      };
+      return { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'موعد غير صالح', isExpired: false };
     }
 
     const diffTime = deadlineDate.getTime() - today.getTime();
@@ -381,9 +396,51 @@
       .replace(/'/g, '&#039;');
   }
 
+  /** Accept absolute public HTTPS links only; reject embedded credentials and malformed URLs. */
+  function safeOfficialUrl(value) {
+    if (typeof value !== 'string' || /[\x00-\x1f\x7f]/.test(value)) return '#';
+    try {
+      const url = new URL(value);
+      if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) return '#';
+      return url.href;
+    } catch (_) { return '#'; }
+  }
+
   // ============================================================================
   // FILTER DROPDOWNS
   // ============================================================================
+
+  const COUNTRY_AR = {
+    'France': 'فرنسا', 'Canada': 'كندا', 'United States': 'الولايات المتحدة',
+    'China': 'الصين', 'Germany': 'ألمانيا', 'Online': 'عبر الإنترنت',
+    'United Kingdom': 'المملكة المتحدة', 'Japan': 'اليابان'
+  };
+
+  function countryLabel(country) { return COUNTRY_AR[country] || country; }
+
+  // Consistent filter groups. Keep the source field in each opportunity's details.
+  // Broad fields are grouped only for discovery, not as claims that every major is eligible.
+  function fieldGroup(field) {
+    const normalized = normalizeArabic(String(field || '')).trim();
+    const broad = [
+      'تخصصات البكالوريوس المتاحة', 'جميع التخصصات المتاحة للبكالوريوس',
+      'التخصصات الجامعية المتاحة', 'جميع تخصصات الجامعة',
+      'جميع التخصصات المتاحة في الجامعة', 'دراسات الصين متعددة التخصصات'
+    ];
+    if (broad.some(v => normalizeArabic(v) === normalized)) return 'برامج جامعية متعددة التخصصات';
+    if (/الفلك|الفيزياء الفلكيه|الفيزياء الكونيه/.test(normalized)) return 'الفلك والفيزياء الفلكية';
+    if (/العلوم السياسيه|العلوم الاجتماعيه|العلاقات الدوليه/.test(normalized)) return 'العلوم السياسية والاجتماعية والعلاقات الدولية';
+    return field || '';
+  }
+
+  function getStudyLevel(item) {
+    if (item.category !== 'Scholarship') return '';
+    const name = normalizeArabic(`${item.title_ar || ''} ${item.title_en || ''}`).toLowerCase();
+    if (/دكتوراه|phd|doctoral|doktor/.test(name)) return 'phd';
+    if (/ماجستير|master|graduate|yenching/.test(name)) return 'master';
+    if (/بكالوريوس|undergraduate|bachelor|ingram|vanderbilt|ubc/.test(name)) return 'bachelor';
+    return '';
+  }
 
   function populateFilterDropdowns(opportunities) {
     const categories = new Set();
@@ -392,15 +449,15 @@
 
     opportunities.forEach((item) => {
       if (item.category) categories.add(item.category);
-      if (item.field) fields.add(item.field);
+      if (item.field) fields.add(fieldGroup(item.field));
       if (item.country) countries.add(item.country);
     });
 
     populateSelect(elements.filterCategory, Array.from(categories), (cat) => {
       return (CATEGORY_MAP[cat] && CATEGORY_MAP[cat].label) || cat;
     });
-    populateSelect(elements.filterField, Array.from(fields).sort());
-    populateSelect(elements.filterCountry, Array.from(countries).sort());
+    populateSelect(elements.filterField, Array.from(fields).sort((a, b) => a.localeCompare(b, 'ar')));
+    populateSelect(elements.filterCountry, Array.from(countries).sort(), (country) => COUNTRY_AR[country] || country);
   }
 
   function populateSelect(selectElem, items, labelFn) {
@@ -427,7 +484,7 @@
   // ============================================================================
 
   function filterOpportunities() {
-    const { query, category, field, country, status } = state.activeFilters;
+    const { query, category, field, country, level, status } = state.activeFilters;
     const normalizedQuery = normalizeArabic(query);
 
     let pool = state.allOpportunities;
@@ -439,11 +496,17 @@
 
     state.filteredOpportunities = pool.filter((item) => {
       if (category && item.category !== category) return false;
-      if (field && item.field !== field) return false;
+      if (field && fieldGroup(item.field) !== field) return false;
       if (country && item.country !== country) return false;
+      if (level && getStudyLevel(item) !== level) return false;
 
       if (status) {
-        const deadlineInfo = calculateDeadlineStatus(item.deadline);
+        const deadlineInfo = calculateDeadlineStatus(item.deadline, item.category);
+    if (item.review_status === 'programme_suspended_or_unconfirmed') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'البرنامج غير مؤكد / معلّق', isExpired: false });
+    } else if (item.review_status === 'needs_manual_verification') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'يحتاج التحقق من التقديم', isExpired: false });
+    }
         if (deadlineInfo.status !== status) return false;
       }
 
@@ -474,7 +537,12 @@
   // ============================================================================
 
   function createCardElement(item) {
-    const deadlineInfo = calculateDeadlineStatus(item.deadline);
+    const deadlineInfo = calculateDeadlineStatus(item.deadline, item.category);
+    if (item.review_status === 'programme_suspended_or_unconfirmed') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'البرنامج غير مؤكد / معلّق', isExpired: false });
+    } else if (item.review_status === 'needs_manual_verification') {
+      Object.assign(deadlineInfo, { status: 'تحقق من التقديم', badgeClass: 'status-unknown', label: 'يحتاج التحقق من التقديم', isExpired: false });
+    }
     const categoryInfo = CATEGORY_MAP[item.category] || {
       label: item.category || 'أخرى',
       className: 'default'
@@ -487,7 +555,7 @@
 
     const deadlineFormatted =
       item.deadline === 'Rolling'
-        ? 'تقديم مستمر (Rolling)'
+        ? (item.category === 'Course' ? 'تعلم مرن / تحقق من التسجيل' : 'يختلف حسب دورة التقديم')
         : escapeHtml(item.deadline);
 
     card.innerHTML = `
@@ -524,7 +592,7 @@
           </li>
           <li class="card-meta-item">
             <span class="meta-label">الوجهة:</span>
-            <span class="meta-value" title="${escapeHtml(item.country)}"><bdi>${escapeHtml(item.country)}</bdi></span>
+            <span class="meta-value" title="${escapeHtml(countryLabel(item.country))}"><bdi>${escapeHtml(countryLabel(item.country))}</bdi></span>
           </li>
           <li class="card-meta-item">
             <span class="meta-label">التمويل:</span>
@@ -681,6 +749,7 @@
       state.activeFilters.category !== '' ||
       state.activeFilters.field !== '' ||
       state.activeFilters.country !== '' ||
+      state.activeFilters.level !== '' ||
       state.activeFilters.status !== '';
 
     elements.resetFiltersBtn.style.display = isFilterActive ? 'inline-flex' : 'none';
@@ -728,6 +797,7 @@
       category: '',
       field: '',
       country: '',
+      level: '',
       status: ''
     };
 
@@ -736,6 +806,7 @@
     if (elements.filterCategory) elements.filterCategory.value = '';
     if (elements.filterField) elements.filterField.value = '';
     if (elements.filterCountry) elements.filterCountry.value = '';
+    if (elements.filterLevel) elements.filterLevel.value = '';
     if (elements.filterStatus) elements.filterStatus.value = '';
 
     filterOpportunities();
@@ -807,6 +878,12 @@
       filterOpportunities();
     });
 
+    // Academic degree filter
+    if (elements.filterLevel) elements.filterLevel.addEventListener('change', (e) => {
+      state.activeFilters.level = e.target.value;
+      filterOpportunities();
+    });
+
     // Country filter
     elements.filterCountry.addEventListener('change', (e) => {
       state.activeFilters.country = e.target.value;
@@ -848,6 +925,7 @@
     elements.filterCategory       = document.getElementById('filter-category');
     elements.filterField          = document.getElementById('filter-field');
     elements.filterCountry        = document.getElementById('filter-country');
+    elements.filterLevel          = document.getElementById('filter-level');
     elements.filterStatus         = document.getElementById('filter-status');
     elements.resultsCount         = document.getElementById('results-count');
     elements.resetFiltersBtn      = document.getElementById('reset-filters-btn');
@@ -885,6 +963,16 @@
     calculateDeadlineStatus: calculateDeadlineStatus,
     normalizeArabic: normalizeArabic
   };
+
+  // Register the offline cache only on a secure origin (HTTPS or localhost).
+  if ('serviceWorker' in navigator &&
+      (window.location.protocol === 'https:' ||
+       ['localhost', '127.0.0.1'].includes(window.location.hostname))) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .catch((error) => console.warn('Offline support is unavailable:', error));
+    });
+  }
 
   // Auto-init on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {

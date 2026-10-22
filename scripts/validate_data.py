@@ -86,7 +86,7 @@ def validate_opportunities(data_path: Path):
     total_records = len(data)
     errors = []
     seen_ids = set()
-    today = datetime.date.today()
+    today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3))).date()  # Yemen (Asia/Aden) local date
 
     for idx, item in enumerate(data, start=1):
         record_id = item.get("id") if isinstance(item, dict) else f"item_{idx}"
@@ -173,11 +173,11 @@ def validate_opportunities(data_path: Path):
     print("Catalog Completeness Check:")
     if total_records >= MIN_REQUIRED_OPPORTUNITIES:
         print(
-            f"[SUCCESS] Dataset meets requirement: {total_records}/{MIN_REQUIRED_OPPORTUNITIES} verified opportunities."
+            f"[SUCCESS] Dataset meets requirement: {total_records}/{MIN_REQUIRED_OPPORTUNITIES} structurally valid entries (manual source verification is separate)."
         )
     else:
         print(
-            f"[PENDING] Minimum required: {MIN_REQUIRED_OPPORTUNITIES} verified opportunities."
+            f"[PENDING] Minimum required: {MIN_REQUIRED_OPPORTUNITIES} structurally valid entries (manual source verification is separate)."
         )
         print(f"          Current count   : {total_records}")
         print(
