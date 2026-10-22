@@ -1,0 +1,54 @@
+﻿00f7e45 | 2026-10-22 04:25:50 +0300 | safiafares20073 | fix: translate favorites empty state
+ index.html           | 2 +-
+ js/ui-preferences.js | 3 +++
+ sw.js                | 2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+1e1cd98 | 2026-10-22 04:12:14 +0300 | safiafares20073 | feat: finalize opportunities portal with bilingual UI, offline support and security improvements
+ DATA_AUDIT.md                        |  43 ++++
+ README.md                            |  50 ++++
+ README_DEPLOY.md                     |  25 ++
+ SECURITY_REVIEW.md                   |  23 ++
+ TEST_REPORT.md                       |  40 +++
+ css/style.css                        | 111 +++++++-
+ data/opportunities.json              | 303 +++++++++++++++++++++-
+ index.html                           |  27 +-
+ js/app.js                            | 134 ++++++++--
+ js/ui-preferences.js                 | 270 ++++++++++++++++++++
+ scripts/import_opportunities.py      | 479 +++++++++++++++++++++++++++++++++++
+ scripts/test_offline_sw.py           | 357 ++++++++++++++++++++++++++
+ scripts/test_release_smoke.py        |  26 ++
+ scripts/test_security_regression.py  |  16 ++
+ scripts/validate_data.py             |   6 +-
+ scripts/weekly_opportunity_report.py |  27 ++
+ sw.js                                | 146 +++++++++++
+ tests/test_sw.js                     |  58 +++++
+ 18 files changed, 2110 insertions(+), 31 deletions(-)
+
+fd890cd | 2026-10-21 02:02:17 +0300 | safiafares20073 | feat: complete opportunity portal milestones 1 and 2
+ css/style.css                          | 941 +++++++++++++++++++++++++++++++++
+ index.html                             | 201 +++++++
+ js/app.js                              | 898 +++++++++++++++++++++++++++++++
+ scripts/check_overflow.py              | 159 ++++++
+ scripts/run_browser_verification.py    | 469 ++++++++++++++++
+ scripts/test_milestone2_browser.py     | 646 ++++++++++++++++++++++
+ scripts/test_ui_logic.py               | 242 +++++++++
+ scripts/verify_server_and_pages.py     | 124 +++++
+ test-harness.html                      | 205 +++++++
+ tests/fixtures/test-opportunities.json | 122 +++++
+ 10 files changed, 4007 insertions(+)
+
+1f37e7c | 2026-10-16 01:25:08 +0300 | safiafares20073 | feat(data): add opportunity schema, validator script, and data entry guide
+ DATA_GUIDE.md                |  56 ++++++++++++
+ data/opportunities.json      |   1 +
+ data/opportunity-schema.json |  93 ++++++++++++++++++++
+ scripts/validate_data.py     | 203 +++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 353 insertions(+)
+
+5ea3298 | 2026-10-16 01:08:52 +0300 | safiafares20073 | chore: initialize capstone proposal and agent customizations
+ .agents/rules/project-rules.md            | 33 +++++++++++
+ .agents/skills/arabic-rtl-review/SKILL.md | 76 +++++++++++++++++++++++++
+ .gitignore                                | 38 +++++++++++++
+ GEMINI.md                                 | 33 +++++++++++
+ PROJECT_PROPOSAL.md                       | 92 +++++++++++++++++++++++++++++++
+ 5 files changed, 272 insertions(+)
