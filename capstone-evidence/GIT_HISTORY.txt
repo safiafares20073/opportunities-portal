@@ -1,4 +1,21 @@
-﻿00f7e45 | 2026-10-22 04:25:50 +0300 | safiafares20073 | fix: translate favorites empty state
+﻿f955d26 | 2026-10-22 09:35:56 +0300 | safiafares20073 | docs: add capstone submission evidence and reflection
+ SUBMISSION_CHECKLIST.md                         |  24 ++
+ capstone-evidence/GIT_HISTORY.txt               |  54 ++++
+ capstone-evidence/REFLECTION.md                 |  37 +++
+ capstone-evidence/WEEKLY_REPORT.txt             |   7 +
+ capstone-evidence/plan1_approval.png            | Bin 0 -> 110304 bytes
+ capstone-evidence/plan1_project_proposal.md     | 104 +++++++
+ capstone-evidence/plan2-mobile-filter-layout.md | 264 +++++++++++++++++
+ capstone-evidence/plan2_approval.png            | Bin 0 -> 105008 bytes
+ capstone-evidence/plan3-security-review.md      | 365 ++++++++++++++++++++++++
+ capstone-evidence/plan3_approval.png            | Bin 0 -> 47140 bytes
+ 10 files changed, 855 insertions(+)
+
+acfcb68 | 2026-10-22 09:30:07 +0300 | safiafares20073 | fix: update UBC IMES official scholarship link
+ data/opportunities.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+00f7e45 | 2026-10-22 04:25:50 +0300 | safiafares20073 | fix: translate favorites empty state
  index.html           | 2 +-
  js/ui-preferences.js | 3 +++
  sw.js                | 2 +-
