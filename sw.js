@@ -4,7 +4,7 @@
  * Pure Vanilla JavaScript • Zero External Dependencies • Mobile-First PWA
  */
 
-const CACHE_NAME = 'opportunities-portal-v10';
+const CACHE_NAME = 'opportunities-portal-v11';
 
 // App shell assets required for the complete offline experience
 const PRECACHE_ASSETS = [
